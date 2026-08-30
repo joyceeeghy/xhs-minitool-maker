@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>turntable render</title></head>
+<body style="margin:0;background:#14110d">
+<div id="stage"></div>
+<script>
+/* 转台渲染页模板：配合 scripts/render_turntable.py 使用。
+ * URL 参数：
+ *   base  = three.js 相关脚本所在目录（相对/绝对路径，需含 three.min.js、GLTFLoader.js）
+ *   glb   = base64 内嵌模型脚本路径（配合 var 参数指定其设置的全局变量名）
+ * 例：render_turntable.html?base=../minitool/assets/vendor&glb=../minitool/assets/shenyi-glb.js
+ * 注意：three.js 与 GLTFLoader 需提前完成容器兼容补丁（见 references/minitool-spec.md 踩坑 #12）。
+ */
+var Q = new URLSearchParams(location.search);
+var BASE = Q.get("base") || "../minitool/assets/vendor";
+var GLB = Q.get("glb") || "../minitool/assets/shenyi-glb.js";
+var GLBVAR = Q.get("var") || "GLB_B64";
+function loadScript(src) {
+  return new Promise(function (ok, no) {
+    var s = document.createElement("script");
+    s.src = src; s.onload = ok; s.onerror = function () { no(new Error("load fail: " + src)); };
+    document.head.appendChild(s);
+  });
+}
+Promise.resolve()
+  .then(function () { return loadScript(BASE + "/three.min.js"); })
+  .then(function () { return loadScript(BASE + "/GLTFLoader.js"); })
+  .then(function () { return loadScript(GLB); })
+  .then(start)
+  .catch(function (e) { window.renderError = String(e && e.message || e); });
+
+function start() {
+var W = 480, H = 552;
+var renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1);
+renderer.setSize(W, H);
+renderer.setClearColor(0x14110d, 1);
+document.getElementById("stage").appendChild(renderer.domElement);
+
+var scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x14110d, 5.5, 10);
+var camera = new THREE.PerspectiveCamera(38, W / H, 0.1, 50);
+camera.position.set(0, 1.55, 3.6);
+camera.lookAt(0, 0.95, 0);
+
+/* 暖金博物馆灯光（与主小工具一致） */
+scene.add(new THREE.AmbientLight(0x8a7c60, 0.55));
+var key = new THREE.DirectionalLight(0xffe2b0, 1.15); key.position.set(2.5, 4, 3); scene.add(key);
+var rim = new THREE.PointLight(0xc8a15e, 0.9, 12); rim.position.set(-2.6, 2.2, -2.4); scene.add(rim);
+var fill = new THREE.PointLight(0x7a6cff, 0.25, 10); fill.position.set(0, 1.2, -3); scene.add(fill);
+
+var ground = new THREE.Mesh(new THREE.CircleGeometry(2.2, 48),
+  new THREE.MeshStandardMaterial({ color: 0x1c1813, roughness: 0.95, metalness: 0 }));
+ground.rotation.x = -Math.PI / 2; scene.add(ground);
+var ring = new THREE.Mesh(new THREE.RingGeometry(2.2, 2.26, 64),
+  new THREE.MeshBasicMaterial({ color: 0xc8a15e, transparent: true, opacity: 0.5, side: THREE.DoubleSide }));
+ring.rotation.x = -Math.PI / 2; ring.position.y = 0.002; scene.add(ring);
+
+var model = null;
+function decodeGLB() {
+  var b64 = window[GLBVAR].split(",")[1];
+  var bin = atob(b64);
+  var bytes = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes.buffer;
+}
+function normalizeModel(obj) {
+  var box = new THREE.Box3().setFromObject(obj);
+  var size = box.getSize(new THREE.Vector3());
+  var scale = 1.78 / (size.y || 1);
+  obj.scale.setScalar(scale);
+  box.setFromObject(obj);
+  var center = box.getCenter(new THREE.Vector3());
+  obj.position.x -= center.x;
+  obj.position.z -= center.z;
+  obj.position.y -= box.min.y;
+  return obj;
+}
+window.renderReady = false;
+window.renderError = "";
+new THREE.GLTFLoader().parse(decodeGLB(), "", function (gltf) {
+  model = normalizeModel(gltf.scene);
+  scene.add(model);
+  window.renderReady = true;
+}, function (e) {
+  window.renderError = String((e && (e.message || e.type)) || e);
+});
+
+window.renderFrame = function (angleRad) {
+  if (!model) return "ERR:" + window.renderError;
+  model.rotation.y = angleRad;
+  renderer.render(scene, camera);
+  return renderer.domElement.toDataURL("image/jpeg", 0.82);
+};
+}
+</script>
+</body>
+</html>
