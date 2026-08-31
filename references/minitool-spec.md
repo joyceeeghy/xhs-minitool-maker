@@ -39,7 +39,7 @@ minitool/
 | 1 | 容器禁 .glb 文件 | GLB → base64 → 内嵌 .js，atob 解码 + GLTFLoader.parse |
 | 2 | 容器禁 fetch/XHR，three.js FileLoader 报错 | 字节级补丁 three.min.js 断网化（仅放行 blob:/data:） |
 | 3 | Meshy 图生贴图失败 | 改文本描述贴图，一次成功 |
-| 4 | Meshy 无公开下载 API | WebBridge 抓包：拦 XHR 头拿临时 JWT，调内部 tasks 接口 |
+| 4 | Meshy 无公开下载 API | 浏览器自动化抓包：拦 XHR 头拿临时 JWT，调内部 tasks 接口 |
 | 5 | CDP 文件上传被拦 | fetch 公网图 → Blob → DataTransfer 注入 input |
 | 6 | GLB 118MB 超 30MB 限制 | gltf-transform 减面 98% + 贴图 512 → 1.6MB |
 | 7 | three r128 不认 WebP 贴图 | 压缩时转 JPEG 贴图 |
@@ -56,7 +56,7 @@ minitool/
 bash scripts/pack_minitool.sh <minitool目录> <输出zip路径>
 ```
 
-验证双通道：本地 `python3 -m http.server` + WebBridge 截图自检 → 用户手机扫码实测。两个阶段都要留截图存档。
+验证双通道：本地 `python3 -m http.server` + 浏览器自动化截图自检 → 用户手机扫码实测。两个阶段都要留截图存档。
 
 ### 2026-08-25 追加（批量 AI 真人模型战役）
 
@@ -96,5 +96,5 @@ bash scripts/pack_minitool.sh <minitool目录> <输出zip路径>
 | # | 坑 | 解法 |
 |---|---|---|
 | 25 | headless Chrome 自检截图不响应 `#anchor` 滚动，分节截图全黑（panel 渐现 opacity:0 未触发） | 页面内置 `?shot=1` 自检模式：强制全部 panel 加 visible + hero 限高，再整页大窗口截图 |
-| 26 | image_generation 2K 不透明底只支持 1:1 / 16:9 | 竖版封面 2:3 用 1K 生成，Pillow LANCZOS 放大到 1024×1536 后排字 |
+| 26 | 部分生图工具 2K 不透明底只支持 1:1 / 16:9 | 竖版封面 2:3 用 1K 生成，Pillow LANCZOS 放大到 1024×1536 后排字 |
 | 27 | 简单几何文物（日晷）不必走 Meshy；three.js 程序化建模 + CanvasTexture 画十二时辰盘，全离线零抓包 | 注意 CylinderGeometry 材质数组顺序 [侧,顶,底]，贴图面法线必须朝向镜头侧（dialGroup.rotation.x 符号决定看到的是字盘面还是空白背面） |

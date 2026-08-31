@@ -33,16 +33,35 @@ xhs-minitool-maker/
     └── render_turntable.html     # 转台渲染模板
 ```
 
-## 安装
+## 安装（任何支持 SKILL.md 规范的 Agent）
 
-把整个文件夹复制到 Kimi Work 的 skills 目录即可：
+本 skill 遵循 [agentskills.io](https://agentskills.io) 的开放规范（`SKILL.md` + frontmatter），可装入 Claude Code、OpenAI Codex、Kimi Work 等任何支持该规范的 Agent。
+
+先 clone：
 
 ```bash
-cp -r xhs-minitool-maker \
-  "$HOME/Library/Application Support/kimi-desktop/daimon-share/daimon/skills/"
+git clone https://github.com/joyceeeghy/xhs-minitool-maker.git
 ```
 
-重启或刷新会话后，跟 Kimi 说「我要做一个小红书小工具」即可触发。
+然后按你的 Agent 复制到对应 skills 目录：
+
+| Agent | 安装命令 |
+|---|---|
+| **Claude Code** | `cp -r xhs-minitool-maker ~/.claude/skills/` |
+| **OpenAI Codex** | `cp -r xhs-minitool-maker ~/.codex/skills/` |
+| **Kimi Work** | `cp -r xhs-minitool-maker "$HOME/Library/Application Support/kimi-desktop/daimon-share/daimon/skills/"` |
+| **其他 Agent** | 复制到该 Agent 的 skills 目录（项目级或用户级均可），重启会话后生效 |
+
+装好后跟 Agent 说「我要做一个小红书小工具」即可触发。
+
+### 运行环境要求
+
+skill 本身不绑定任何产品，但完整流程需要宿主 Agent 具备四项能力（缺了也能跑，见 SKILL.md 降级说明）：
+
+1. 文件读写 + 命令执行（各 Agent 自带）
+2. AI 生图能力（插件 / MCP / 任何文生图 API）
+3. 浏览器自动化能力，能驱动**你登录态下的真实浏览器**——用于 Meshy 建模抓包和截图自检（Kimi WebBridge、Playwright MCP、Chrome DevTools MCP 等任一）
+4. Python 3 + Pillow（封面排版、图片压缩）
 
 ## 三条铁律（来自实战踩坑）
 

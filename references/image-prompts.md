@@ -2,7 +2,9 @@
 
 ## 工具
 
-image_generation 插件（脚本直调）：
+任何 AI 生图能力均可（生图插件、MCP 生图工具、文生图 API）——下面的提示词配方与尺寸纪律**与工具无关**。
+
+参考实现（Kimi image_generation 插件，脚本直调）：
 
 ```bash
 cd "<插件目录>" && python3 scripts/image_generation_tool.py generate \
@@ -11,6 +13,7 @@ cd "<插件目录>" && python3 scripts/image_generation_tool.py generate \
 
 插件目录：`~/Library/Application Support/kimi-desktop/daimon-share/daimon/runtime/kimi-code/home/plugins/managed/image_generation`
 常用参数：对比墙/场景图 `3:2 + 1K`；小红书封面 `2:3 + 2K`；图标 `1:1 + 1K`。
+换其他生图工具时，只需保证输出比例与分辨率等价（封面不足 1024×1536 时用 Pillow LANCZOS 放大）。
 
 ## 三大风格配方
 
@@ -30,7 +33,7 @@ cd "<插件目录>" && python3 scripts/image_generation_tool.py generate \
 ## 封面排版纪律
 
 - AI 只生成**底图**；标题文字一律用 Pillow 后期排版（AI 生成的中文大字必错）。
-- 受管 Python 自带中文字体：`…/daimon/runtime/python/fonts/NotoSansSC-Bold.ttf`、`NotoSansSC-Regular.ttf`（标题也可调用系统字体如「思源宋体」）。
+- 中文字体任选：Kimi 受管 Python 自带 `…/daimon/runtime/python/fonts/NotoSansSC-Bold.ttf`；其他环境用系统字体（macOS 苹方、思源宋体/黑体等）或自行下载 Noto Sans SC。
 - 小红书封面 3:4（1024×1536），底部留白放账号信息，顶部 1/4 留白防标题被 UI 遮挡。
 
 ## 改字纪律（踩坑）
