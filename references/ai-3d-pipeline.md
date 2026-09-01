@@ -31,7 +31,7 @@ curl -s -X POST http://127.0.0.1:10086/command -H 'Content-Type: application/jso
 - `file://` 不允许 navigate——本地页面用 `python3 -m http.server` 临时起服务，**用完必须 kill**（`kill $(lsof -ti:<端口>)`）。
 - evaluate 返回值在 `data.value`。
 
-## 建模流程（以 Meshy 为例，2026-08-25 起全 API 驱动）
+## 建模流程（以 Meshy 为例，全 API 驱动）
 
 1. **先生成参考图**：用 AI 生图能力生成「正面全身、A/T pose、服装配饰齐全、纯色背景」的人物/物件图。用户要求不要白模——模型必须穿衣服、带配饰。
 2. **取令牌**：从 Meshy 页面 cookie 拼 `sb-auth-auth-token.0`+`.1` → 去 `base64-` 前缀 → atob → JSON 取 `access_token` 作 Bearer；401 就重新 navigate 刷新 cookie 再取。
