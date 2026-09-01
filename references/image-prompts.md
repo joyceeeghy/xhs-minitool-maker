@@ -1,19 +1,38 @@
 # AI 生图配方（小红书小工具专用）
 
-## 工具
+## 生图后端：探测顺序（跨环境可移植）
 
-任何 AI 生图能力均可（生图插件、MCP 生图工具、文生图 API）——下面的提示词配方与尺寸纪律**与工具无关**。
+不要假设宿主环境有某个特定图像插件。动手前按以下顺序探测，**命中即用、不再往下**：
 
-参考实现（Kimi image_generation 插件，脚本直调）：
+1. **宿主原生图像工具 / MCP 插件**——查宿主环境的工具列表，有则优先（省去 key 管理）。
+   例：Kimi 环境用 image_generation 插件（脚本直调）：
+   ```bash
+   cd "<插件目录>" && python3 scripts/image_generation_tool.py generate \
+     --description "<提示词>" --ratio 3:2 --resolution 1K --output <输出路径>
+   ```
+   插件目录：`~/Library/Application Support/kimi-desktop/daimon-share/daimon/runtime/kimi-code/home/plugins/managed/image_generation`；首次使用先跑 `python3 scripts/image_generation_tool.py ensure-deps`。
 
-```bash
-cd "<插件目录>" && python3 scripts/image_generation_tool.py generate \
-  --description "<提示词>" --ratio 3:2 --resolution 1K --output <输出路径>
-```
+   **该插件的硬性规格（以插件文档为准）：**
+   - 尺寸矩阵：1K 支持 `1:1 / 3:2 / 2:3`；2K 仅 `1:1 / 16:9`；4K 仅 `16:9 / 9:16`。**2K 没有 2:3**——封面 2:3（1024×1536）只能用 1K。
+   - **透明底**：`--background transparent` 生成免抠素材（贴纸、鱼群、器物元素），仅限 1K + `1:1/3:2/2:3` + PNG 输出。
+   - **垫图**：`--reference-image` 只接受公开 URL，传本地路径会被拒；本地参考图先 `python3 scripts/image_generation_tool.py image-to-url --image-path <本地图>` 换 URL 再传入。阶段二收集的文物参考图即由此进入生图。
+2. **API 直调**——检查环境变量里的 key，用脚本调用：
 
-插件目录：`~/Library/Application Support/kimi-desktop/daimon-share/daimon/runtime/kimi-code/home/plugins/managed/image_generation`
-常用参数：对比墙/场景图 `3:2 + 1K`；小红书封面 `2:3 + 2K`；图标 `1:1 + 1K`。
-换其他生图工具时，只需保证输出比例与分辨率等价（封面不足 1024×1536 时用 Pillow LANCZOS 放大）。
+   | 环境变量 | 后端 | 适用说明 |
+   | --- | --- | --- |
+   | `ARK_API_KEY` | 即梦 Seedream（火山方舟） | 中式审美 / 中文提示词最强，古风文物题材首选 |
+   | `DASHSCOPE_API_KEY` | 通义万相 | 中文场景稳定，古风人物可靠 |
+   | `OPENAI_API_KEY` | gpt-image-1 | 通用，指令遵循好 |
+   | `GEMINI_API_KEY` | Gemini 图像 | 多轮改图、主体一致性强 |
+   | `FAL_KEY` | Flux（fal.ai） | 写实质感好 |
+
+   各后端的尺寸/比例参数名不同（如 `size` / `aspect_ratio`），**调用前查官方文档，不凭记忆**。
+3. **本地 ComfyUI**——探测 `localhost:8188`；零边际成本可批量，但需 GPU，古风题材质量取决于 checkpoint，方差大。
+4. **程序化兜底（无任何 AI 模型也能交付）**——封面/信息图/对比墙用 Pillow 排版；图表用 matplotlib / SVG；3D 展示用 three.js 程序化建模；素材可用免版权图库（Unsplash、博物馆开放馆藏）二次排版。都没有时明确告诉用户哪些图需要人工补。
+
+**提示词保持后端无关**：只写主体、风格、构图、负面约束；尺寸、步数等参数差异收进各后端的调用脚本，不混进配方。
+
+常用画幅：对比墙/场景图 `3:2`；小红书封面 `2:3`（插件无 3:4，1024×1536 已验证可正常发布）；图标 `1:1`。分辨率按后端能力选——注意 Kimi 插件 2K 档不支持 2:3，封面只能 1K。
 
 ## 三大风格配方
 
@@ -34,7 +53,7 @@ cd "<插件目录>" && python3 scripts/image_generation_tool.py generate \
 
 - AI 只生成**底图**；标题文字一律用 Pillow 后期排版（AI 生成的中文大字必错）。
 - 中文字体任选：Kimi 受管 Python 自带 `…/daimon/runtime/python/fonts/NotoSansSC-Bold.ttf`；其他环境用系统字体（macOS 苹方、思源宋体/黑体等）或自行下载 Noto Sans SC。
-- 小红书封面 3:4（1024×1536），底部留白放账号信息，顶部 1/4 留白防标题被 UI 遮挡。
+- 小红书封面 1024×1536（2:3，已验证可发布），底部留白放账号信息，顶部 1/4 留白防标题被 UI 遮挡。
 
 ## 改字纪律（踩坑）
 
